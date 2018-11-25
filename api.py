@@ -39,5 +39,5 @@ def save_record(document):
 
 def get_all_record():
     with IDisposable(cosmos_client.CosmosClient(HOST, {'masterKey': MASTER_KEY})) as client:
-        documentlist = list(client.ReadItems(collection_link, {'maxItemCount': 10}))
+        documentlist = list(client.ReadItems(collection_link))
         return {"records": documentlist}
