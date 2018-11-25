@@ -2,10 +2,12 @@ let earthquakes;
 let url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.csv'
 let logger = document.getElementById('log');
 
+const urlTwitter = "/get-all-records";
+const promiseT = fetch(urlTwitter).then(response =>{
+    return response.ok ? response.json() : Promise.reject(response.status);
+});
 
-
-
-var promiseR = fetch(url).then(function (response) {
+const promiseR = fetch(url).then(function (response) {
     return response.ok ? response.text() : Promise.reject(response.status);
 })
 
@@ -19,6 +21,51 @@ initMap = async () => {
         },
         mapTypeId: 'terrain'
     });
+
+    let allRecords;
+
+    promiseT.then(response =>{
+        console.log(response)
+        allRecords = response.records
+        console.log(allRecords)
+
+
+        let heatVar=[];
+        for (let i = 1; i < allRecords.length; i++) {
+            let data = allRecords[i];
+
+            //mag = parseFloat(data.mag);
+            latitude = parseFloat(data.pos.coordinates[1]);
+            longitude = parseFloat(data.pos.coordinates[0]);
+            score = parseFloat(data.score) * 1000;
+
+            if(score < 50){
+                score = score * 10
+            }
+            heatVar.concat(new google.maps.LatLng(latitude, longitude));
+            center ={
+                lat: latitude,
+                lng: longitude
+            }
+            var cityCircle = new google.maps.Circle({
+                strokeColor: '#394aff',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#394aff',
+                fillOpacity: 0.35,
+                map: map,
+                center: center,
+                radius: score
+            });
+
+
+        }
+
+        heatmap = new google.maps.visualization.HeatmapLayer({
+          data: heatVar,
+          map: map
+        });
+    })
 
 
     promiseR.then(function (text) {
@@ -39,11 +86,15 @@ initMap = async () => {
                 lng: longitude
             };
 
+            if (mag >= 6){
+                continue;
+            }
+
             var cityCircle = new google.maps.Circle({
-                strokeColor: '#FF0000',
+                strokeColor: '#ff0000',
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: '#FF0000',
+                fillColor: '#ff0000',
                 fillOpacity: 0.35,
                 map: map,
                 center: center,
